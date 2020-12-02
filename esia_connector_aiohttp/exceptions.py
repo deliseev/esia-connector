@@ -1,5 +1,5 @@
 import jwt
-import requests.exceptions
+import aiohttp
 
 
 class EsiaError(Exception):
@@ -14,5 +14,5 @@ class IncorrectMarkerError(EsiaError, jwt.InvalidTokenError):
     pass
 
 
-class HttpError(EsiaError, requests.exceptions.HTTPError):
+class HttpError(EsiaError, aiohttp.ClientError):
     pass

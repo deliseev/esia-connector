@@ -4,8 +4,8 @@ from urllib.parse import urlencode
 import jwt
 from jwt.exceptions import InvalidTokenError
 
-from esia_connector.exceptions import IncorrectMarkerError
-from esia_connector.utils import get_timestamp, sign_params, make_request
+from esia_connector_aiohttp.exceptions import IncorrectMarkerError
+from esia_connector_aiohttp.utils import get_timestamp, sign_params, make_request
 
 
 class EsiaSettings:
@@ -72,7 +72,7 @@ class EsiaAuth:
                                                       auth_url=self._AUTHORIZATION_URL,
                                                       params=params)
 
-    def complete_authorization(self, code, state, validate_token=True, redirect_uri=None):
+    async def complete_authorization(self, code, state, validate_token=True, redirect_uri=None):
         """
         Exchanges received code and state to access token, validates token (optionally), extracts ESIA user id from
         token and returns ESIAInformationConnector instance.
@@ -103,7 +103,7 @@ class EsiaAuth:
         url = '{base_url}{token_url}'.format(base_url=self.settings.esia_service_url,
                                              token_url=self._TOKEN_EXCHANGE_URL)
 
-        response_json = make_request(url=url, method='POST', data=params)
+        response_json = await make_request(url=url, method='POST', data=params)
 
         id_token = response_json['id_token']
 
@@ -164,7 +164,7 @@ class EsiaInformationConnector:
         self.settings = settings
         self._rest_base_url = '%s/rs' % settings.esia_service_url
 
-    def esia_request(self, endpoint_url, accept_schema=None):
+    async def esia_request(self, endpoint_url, accept_schema=None):
         """
         Makes request to ESIA REST service and returns response JSON data.
         :param str endpoint_url: endpoint url
@@ -182,7 +182,7 @@ class EsiaInformationConnector:
         else:
             headers['Accept'] = 'application/json'
 
-        return make_request(url=endpoint_url, headers=headers)
+        return await make_request(url=endpoint_url, headers=headers)
 
     def get_person_main_info(self, accept_schema=None):
         url = '{base}/prns/{oid}'.format(base=self._rest_base_url, oid=self.oid)

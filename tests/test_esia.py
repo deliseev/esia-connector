@@ -7,13 +7,12 @@ from calendar import timegm
 from unittest import TestCase
 from unittest.mock import patch, create_autospec
 
-import httpretty
 import jwt
 import pytz
 
-from esia_connector.client import EsiaSettings, EsiaAuth, EsiaInformationConnector
-from esia_connector.exceptions import IncorrectJsonError, HttpError, IncorrectMarkerError
-from esia_connector.utils import get_timestamp, sign_params, make_request
+from esia_connector_aiohttp.client import EsiaSettings, EsiaAuth, EsiaInformationConnector
+from esia_connector_aiohttp.exceptions import IncorrectJsonError, HttpError, IncorrectMarkerError
+from esia_connector_aiohttp.utils import get_timestamp, sign_params, make_request
 from tests.utils import SameDict
 
 

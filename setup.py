@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 
-install_requires = ['requests', 'pytz', 'PyJWT', 'cryptography']
+install_requires = ['aiohttp', 'pytz', 'PyJWT']
 
 
 classes = """
@@ -16,19 +16,19 @@ classifiers = [s.strip() for s in classes.split('\n') if s]
 long_description = """
 ESIA-Connector is an integration library for authenticating users using Russian Federation
 official authentication services, provided by ESIA (aka "gosuslugi": http://esia.gosuslugi.ru),
-written in python 3.
+written in python 3. Used AIOHTTP - Async HTTP client/server for asyncio and Python.
 """
 
 setup(
-    name='esia-connector',
+    name='esia-connector-aiohttp',
     version='0.16',
-    description='ESIA integration library',
+    description='ESIA integration library for aiohttp',
     long_description=long_description,
     author='SAPRUN Team',
     author_email='andrey.beliak@saprun.com',
     url='https://github.com/saprun/esia-connector',
     license='BSD',
     classifiers=classifiers,
-    packages=['esia_connector'],
+    packages=['esia_connector_aiohttp'],
     requires=install_requires,
 )

@@ -1,8 +1,8 @@
 import os
 
-from flask import Flask, request
+from aiohttp import web
 
-from esia_connector.client import EsiaSettings, EsiaAuth
+from esia_connector_aiohttp.client import EsiaSettings, EsiaAuth
 
 
 def get_test_file(name):
@@ -24,25 +24,27 @@ assert os.path.exists(TEST_SETTINGS.private_key_file), "Please place your privat
 assert os.path.exists(TEST_SETTINGS.esia_token_check_key), "Please place ESIA public key in res/esia_pub.key !"
 
 
-app = Flask(__name__)
+routes = web.RouteTableDef()
 
 esia_auth = EsiaAuth(TEST_SETTINGS)
 
 
-@app.route("/")
-def hello():
+@routes.get('/')
+async def hello(request) -> web.Response:
     url = esia_auth.get_auth_url()
     return 'Start here: <a href="{0}">{0}</a>'.format(url)
 
 
-@app.route("/info")
-def process():
-    code = request.args.get('code')
-    state = request.args.get('state')
+@routes.get('/info')
+async def process(request) -> web.Response:
+    code = request.query.get('code')
+    state = request.query.get('state')
     esia_connector = esia_auth.complete_authorization(code, state)
     inf = esia_connector.get_person_main_info()
     return "%s" % inf
 
 
 if __name__ == "__main__":
-    app.run()
+    app = web.Application()
+    app.add_routes(routes)
+    web.run_app(app)

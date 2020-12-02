@@ -4,12 +4,12 @@ import datetime
 import shlex
 from subprocess import Popen, PIPE
 import pytz
-import requests
+import aiohttp
 
-from esia_connector.exceptions import IncorrectJsonError, HttpError
+from esia_connector_aiohttp.exceptions import IncorrectJsonError, HttpError
 
 
-def make_request(url, method='GET', headers=None, data=None):
+async def make_request(url, method='GET', headers=None, data=None):
     """
     Makes request to given url and returns parsed response JSON
     :type url: str
@@ -20,11 +20,14 @@ def make_request(url, method='GET', headers=None, data=None):
     :raises HttpError: if requests.HTTPError occurs
     :raises IncorrectJsonError: if response data cannot be parsed to JSON
     """
+
     try:
-        response = requests.request(method, url, headers=headers, data=data)
-        response.raise_for_status()
-        return json.loads(response.content.decode())
-    except requests.HTTPError as e:
+        async with aiohttp.ClientSession() as session:
+            http_method = getattr(session, method)
+            async with http_method(url, params=headers, data=data) as resp:
+                return resp.json()
+
+    except Exception as e:
         raise HttpError(e)
     except ValueError as e:
         raise IncorrectJsonError(e)
