@@ -1,12 +1,13 @@
+import asyncio
 import base64
-import json
 import datetime
 import shlex
-from subprocess import Popen, PIPE
-import pytz
-import aiohttp
+from subprocess import PIPE, Popen
 
-from esia_connector_aiohttp.exceptions import IncorrectJsonError, HttpError
+import aiohttp
+import pytz
+
+from esia_connector_aiohttp.exceptions import HttpError, IncorrectJsonError
 
 
 async def make_request(url, method='GET', headers=None, data=None):
@@ -33,7 +34,7 @@ async def make_request(url, method='GET', headers=None, data=None):
         raise IncorrectJsonError(e)
 
 
-def sign_params(params, certificate_file, private_key_file):
+async def sign_params(params, certificate_file, private_key_file):
     """
     Signs params adding client_secret key, containing signature based on `scope`, `timestamp`, `client_id` and `state`
     keys values.
@@ -48,8 +49,23 @@ def sign_params(params, certificate_file, private_key_file):
         cert=certificate_file,
         key=private_key_file
     )
-    p = Popen(shlex.split(cmd), stdout=PIPE, stdin=PIPE)
-    raw_client_secret = p.communicate(plaintext.encode())[0]
+    # p = Popen(shlex.split(cmd), stdout=PIPE, stdin=PIPE)
+    print(f'Run {cmd}')
+    proc = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE)
+
+    stdout, stderr = await proc.communicate()
+
+    print(f'[{cmd!r} exited with {proc.returncode}]')
+    if stdout:
+        print(f'[stdout]\n{stdout.decode()}')
+    if stderr:
+        print(f'[stderr]\n{stderr.decode()}')
+
+    # raw_client_secret = p.communicate(plaintext.encode())[0]
+    raw_client_secret = stdout.decode()
 
     params.update(
         client_secret=base64.urlsafe_b64encode(raw_client_secret).decode('utf-8'),

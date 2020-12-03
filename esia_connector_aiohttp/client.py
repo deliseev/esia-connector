@@ -44,7 +44,7 @@ class EsiaAuth:
         """
         self.settings = settings
 
-    def get_auth_url(self, state=None, redirect_uri=None):
+    async def get_auth_url(self, state=None, redirect_uri=None):
         """
         Return url which end-user should visit to authorize at ESIA.
         :param str or None state: identifier, will be returned as GET parameter in redirected request after auth.
@@ -62,7 +62,7 @@ class EsiaAuth:
             'timestamp': get_timestamp(),
             'access_type': 'offline'
         }
-        params = sign_params(params,
+        params = await sign_params(params,
                              certificate_file=self.settings.certificate_file,
                              private_key_file=self.settings.private_key_file)
 
@@ -96,7 +96,7 @@ class EsiaAuth:
             'state': state,
         }
 
-        params = sign_params(params,
+        params = await sign_params(params,
                              certificate_file=self.settings.certificate_file,
                              private_key_file=self.settings.private_key_file)
 
@@ -184,19 +184,19 @@ class EsiaInformationConnector:
 
         return await make_request(url=endpoint_url, headers=headers)
 
-    def get_person_main_info(self, accept_schema=None):
+    async def get_person_main_info(self, accept_schema=None):
         url = '{base}/prns/{oid}'.format(base=self._rest_base_url, oid=self.oid)
-        return self.esia_request(endpoint_url=url, accept_schema=accept_schema)
+        return await self.esia_request(endpoint_url=url, accept_schema=accept_schema)
 
-    def get_person_addresses(self, accept_schema=None):
+    async def get_person_addresses(self, accept_schema=None):
         url = '{base}/prns/{oid}/addrs?embed=(elements)'.format(base=self._rest_base_url, oid=self.oid)
-        return self.esia_request(endpoint_url=url, accept_schema=accept_schema)
+        return await self.esia_request(endpoint_url=url, accept_schema=accept_schema)
 
-    def get_person_contacts(self, accept_schema=None):
+    async def get_person_contacts(self, accept_schema=None):
         url = '{base}/prns/{oid}/ctts?embed=(elements)'.format(base=self._rest_base_url, oid=self.oid)
-        return self.esia_request(endpoint_url=url, accept_schema=accept_schema)
+        return await self.esia_request(endpoint_url=url, accept_schema=accept_schema)
 
-    def get_person_documents(self, accept_schema=None):
+    async def get_person_documents(self, accept_schema=None):
         url = '{base}/prns/{oid}/docs?embed=(elements)'.format(base=self._rest_base_url, oid=self.oid)
-        return self.esia_request(endpoint_url=url, accept_schema=accept_schema)
+        return await self.esia_request(endpoint_url=url, accept_schema=accept_schema)
 
