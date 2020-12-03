@@ -7,10 +7,10 @@ from subprocess import PIPE, Popen
 import aiohttp
 import pytz
 
-from esia_connector_aiohttp.exceptions import HttpError, IncorrectJsonError
+from esia_connector_aiohttp.exceptions import HttpError, IncorrectJsonError, OpenSSLError
 
 
-async def make_request(url, method='GET', headers=None, data=None):
+async def make_request(url, method='GET', headers=None, data=None, verify_ssl=False):
     """
     Makes request to given url and returns parsed response JSON
     :type url: str
@@ -23,10 +23,12 @@ async def make_request(url, method='GET', headers=None, data=None):
     """
 
     try:
-        async with aiohttp.ClientSession() as session:
-            http_method = getattr(session, method)
-            async with http_method(url, params=headers, data=data) as resp:
-                return resp.json()
+        # TODO: SSLCertVerificationError
+        # https://github.com/aio-libs/aiohttp/issues/955
+        connector=aiohttp.TCPConnector(verify_ssl=verify_ssl)
+        async with aiohttp.ClientSession(connector=connector) as session:
+            async with session.request(method, url, headers=headers, data=data) as resp:
+                return await resp.json()
 
     except Exception as e:
         raise HttpError(e)
@@ -44,33 +46,32 @@ async def sign_params(params, certificate_file, private_key_file):
     :return:signed request parameters
     :rtype: dict
     """
-    plaintext = params.get('scope', '') + params.get('timestamp', '') + params.get('client_id', '') + params.get('state', '')
+    plaintext = ''.join([
+        params.get(key, '') for key in ['scope', 'timestamp', 'client_id', 'state']
+    ])
+
     cmd = 'openssl smime  -sign -md md_gost12_256 -signer {cert} -inkey {key} -outform DER'.format(
         cert=certificate_file,
         key=private_key_file
     )
     # p = Popen(shlex.split(cmd), stdout=PIPE, stdin=PIPE)
-    print(f'Run {cmd}')
+    print(f'Run1 {cmd}')
     proc = await asyncio.create_subprocess_shell(
         cmd,
+        stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE)
-
-    stdout, stderr = await proc.communicate()
-
-    print(f'[{cmd!r} exited with {proc.returncode}]')
-    if stdout:
-        print(f'[stdout]\n{stdout.decode()}')
-    if stderr:
-        print(f'[stderr]\n{stderr.decode()}')
+        stderr=asyncio.subprocess.STDOUT,
+    )
+    print(f'Finish........')
 
     # raw_client_secret = p.communicate(plaintext.encode())[0]
-    raw_client_secret = stdout.decode()
+    stdout, stderr = await proc.communicate(input=plaintext.encode())
 
-    params.update(
-        client_secret=base64.urlsafe_b64encode(raw_client_secret).decode('utf-8'),
-    )
-    return params
+    if proc.returncode != 0:
+        raise OpenSSLError
+
+    client_secret=base64.urlsafe_b64encode(stdout).decode('utf-8'),
+    return {**params, 'client_secret': client_secret}
 
 
 def get_timestamp():

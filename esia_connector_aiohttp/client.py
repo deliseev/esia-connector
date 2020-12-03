@@ -96,9 +96,11 @@ class EsiaAuth:
             'state': state,
         }
 
-        params = await sign_params(params,
-                             certificate_file=self.settings.certificate_file,
-                             private_key_file=self.settings.private_key_file)
+        params = await sign_params(
+            params,
+            certificate_file=self.settings.certificate_file,
+            private_key_file=self.settings.private_key_file,
+        )
 
         url = '{base_url}{token_url}'.format(base_url=self.settings.esia_service_url,
                                              token_url=self._TOKEN_EXCHANGE_URL)

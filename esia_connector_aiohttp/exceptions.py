@@ -16,3 +16,7 @@ class IncorrectMarkerError(EsiaError, jwt.InvalidTokenError):
 
 class HttpError(EsiaError, aiohttp.ClientError):
     pass
+
+
+class OpenSSLError(EsiaError):
+    pass
