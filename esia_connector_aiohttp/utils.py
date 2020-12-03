@@ -54,17 +54,13 @@ async def sign_params(params, certificate_file, private_key_file):
         cert=certificate_file,
         key=private_key_file
     )
-    # p = Popen(shlex.split(cmd), stdout=PIPE, stdin=PIPE)
-    print(f'Run1 {cmd}')
     proc = await asyncio.create_subprocess_shell(
         cmd,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
     )
-    print(f'Finish........')
 
-    # raw_client_secret = p.communicate(plaintext.encode())[0]
     stdout, stderr = await proc.communicate(input=plaintext.encode())
 
     if proc.returncode != 0:
